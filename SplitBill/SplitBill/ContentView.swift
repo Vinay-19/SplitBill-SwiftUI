@@ -9,92 +9,89 @@ import SwiftUI
 
 struct ContentView: View {
     
-    @State private var splitAmount = 0.0
-    @State private var numberOfPeople = 0
-    @State private var tipPercentage = 0
-    @FocusState private var showKeyboard: Bool
-    @State private var totalAmountWithTip: Double = 0.0
-    @State private var amountPerPerson: Double = 0.0
+    @State private var checkAmount = 0.0
+    @State private var numberOfPeople = 2
+    @State private var tipPercentage = 2
+    @FocusState private var amountIsFocused: Bool
     
     let tipPercentages = [10, 15, 20, 25, 0]
     
-//    var totalAmountWithTip: Double{
-//
-//        let tipPercent = Double(tipPercentage)
-//        let tipValue = splitAmount * (tipPercent / 100)
-//        let grandTotal = splitAmount + tipValue
-//        return grandTotal
-//
-//
-//    }
-//    var amountPerPerson: Double {
-//
-//        let peopleCount = Double(numberOfPeople + 2)
-//        let tipPercent = Double(tipPercentage)
-//        let tipValue = splitAmount / 100 * tipPercent
-//        let grandTotal = splitAmount + tipValue
-//        let amountPerPerson = grandTotal  / peopleCount
-//        return amountPerPerson
-//
-//    }
+    var totalAmountIncludingTip: Double {
+        //let peopleCount = Double(numberOfPeople + 2)
+        let tipSelection = Double(tipPercentage)
+        let tipValue = checkAmount / 100 * tipSelection
+        let grandTotal = checkAmount + tipValue
+        return grandTotal
+    }
+    
+    var totalPerPerson: Double {
+        let peopleCount = Double(numberOfPeople + 2)
+        let tipSelection = Double(tipPercentage)
+        let tipValue = checkAmount / 100 * tipSelection
+        let grandTotal = checkAmount + tipValue
+        let amountPerPerson = grandTotal / peopleCount
+        return amountPerPerson
+    }
+    
     var body: some View {
-        NavigationView{
-            ZStack{
-                
-                LinearGradient(gradient: .init(colors: [.white,.cyan]), startPoint: .bottom, endPoint: .top).ignoresSafeArea()
-                
-                VStack(spacing: 20) {
-                    Text("Enter the amount to split:")
-                    TextField("Amount", value: $splitAmount, format: .currency(code: Locale.current.currency?.identifier ?? "USD"))
+        NavigationView {
+            Form{
+                Section {
+                    TextField("Amount", value: $checkAmount, format: .currency(code: Locale.current.currency?.identifier ?? "USD"))
                         .keyboardType(.decimalPad)
-                        .focused($showKeyboard)
+                        .focused($amountIsFocused)
                     
-                    Text("Select the number of people:")
-                    Picker("Number of people", selection: $numberOfPeople){
-                        ForEach(2..<21){
+                    Picker("Number of people: ", selection: $numberOfPeople) {
+                        ForEach(2..<100) {
                             Text("\($0) people")
                         }
                     }
-                        
-                    
-                    Text("How much tip you want to leave?")
-                    Picker("Tip Percentage", selection: $tipPercentage){
-                        ForEach(tipPercentages, id: \.self){
-                            Text($0, format: .percent)
-                        }
-                    }.pickerStyle(.segmented)
-                    
-                    
-                    Button("Calculate Amount") {
-                        let peopleCount = Double(numberOfPeople + 2)
-                        let tipPercent = Double(tipPercentage)
-                        let tipValue = splitAmount * (tipPercent / 100)
-                        let grandTotal = splitAmount + tipValue
-                        totalAmountWithTip = grandTotal
-                        amountPerPerson = grandTotal  / peopleCount
-                    }.buttonStyle(.bordered)
-                        .background(.blue)
-                        .foregroundColor(.white)
-                        .clipShape(RoundedRectangle(cornerRadius: 20))
-                    
-                    Text("Total amount including tip: \(totalAmountWithTip.formatted())")
-                    Text("Amount per person: \(amountPerPerson.formatted())")
-                    
-                    Spacer()
-                    
+                } header: {
+                    Text("Enter amount to split:")
                 }
                 
+                Section {
+                    Picker("Tip Percentage", selection: $tipPercentage) {
+                        ForEach(0..<101) {
+                            Text($0, format: .percent)
+                        }
+                    }
+                } header: {
+                    Text("How much tip do you want to leave?")
+                }
                 
-                .navigationTitle("Split Bill")
-                .toolbar(){
-                    ToolbarItemGroup(placement: .keyboard){
+//                Section {
+//                    Picker("Tip Percentage", selection: $tipPercentage) {
+//                        ForEach(tipPercentages, id: \.self){
+//                            Text($0 ,format: .percent)
+//                        }
+//                    } .pickerStyle(.segmented)
+//
+//                } header: {
+//                    Text("How much tip do you want to leave?")
+//                }
+                
+                Section{
+                    Text(totalAmountIncludingTip, format: .currency(code: Locale.current.identifier ?? "USD")).foregroundColor(tipPercentage == 0 ? .red : .black)
+                } header: {
+                    Text("Total amount including tip:")
+                }
+                
+                Section {
+                    Text(totalPerPerson, format: .currency(code: Locale.current.currency?.identifier ?? "USD"))
+                } header: {
+                    Text("Total Amount per person including tip:")
+                }
+                
+            }.navigationTitle("SplitBill")
+             .toolbar {
+                    ToolbarItemGroup(placement: .keyboard) {
                         Spacer()
-                        Button("Done"){
-                            showKeyboard = false
+                        Button("Done") {
+                            amountIsFocused = false
                         }
                     }
                 }
-            }
         }
     }
 }
